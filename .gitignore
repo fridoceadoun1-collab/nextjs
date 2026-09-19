@@ -32,9 +32,13 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
+
+# local JSON datastore (CRM / content / approvals) — swap for a real DB before deploying
+/data/*.json
 
 # typescript
 *.tsbuildinfo

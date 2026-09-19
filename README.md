@@ -1,5 +1,37 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Ce que contient ce projet
+
+Un site vitrine + boutique, et un back-office ("assistant commercial virtuel") pour le piloter :
+
+- `/` et `/boutique` — le site public, avec un chatbot (bouton "💬 Discuter" en bas à droite).
+- `/dashboard` — back-office protégé par mot de passe :
+  - **Vue d'ensemble** — statistiques rapides.
+  - **Prospects & clients** — CRM simple (ajout manuel, mise à jour de statut, historique).
+  - **Contenu & réseaux** — file de posts à publier sur Facebook/Instagram/LinkedIn via Metricool.
+  - **À approuver** — les demandes du chatbot qui nécessitent un humain (relance, idée business, paiement à confirmer).
+
+## Ce qui est réellement branché vs. ce qui reste à faire
+
+| Fonctionnalité | État |
+| --- | --- |
+| Qualification de prospects par chat + CRM | ✅ fonctionnel dès maintenant |
+| File de contenu à publier | ✅ fonctionnel dès maintenant |
+| Escalade humaine (dashboard) | ✅ fonctionnel dès maintenant |
+| Réponses du chatbot via Claude | ⚙️ optionnel — ajoutez `ANTHROPIC_API_KEY`, sinon réponses simples par défaut |
+| Notification Slack / email | ⚙️ optionnel — ajoutez `SLACK_WEBHOOK_URL` et/ou `RESEND_API_KEY` |
+| Lien de paiement (Stripe) | ⚙️ optionnel — ajoutez `STRIPE_SECRET_KEY`, sinon l'assistant transmet la demande à un humain |
+| Publication automatique sur les réseaux (Metricool) | ⚙️ optionnel — ajoutez `METRICOOL_API_TOKEN`/`METRICOOL_USER_ID`/`METRICOOL_BLOG_ID`. **Vérifiez le format exact de la requête dans la doc Metricool actuelle avant mise en prod** (voir `lib/social.ts`) |
+| Navigation web autonome, prospection active sur les réseaux, closing 100% automatique | ❌ non implémenté — nécessite des comptes business réels, des accès API avancés et des garde-fous supplémentaires ; à cadrer dans une itération suivante |
+
+Le catalogue produit (`lib/catalog.ts`) est encore une donnée d'exemple : à remplacer par la vraie boutique une fois connectée.
+
+Le stockage (`lib/store.ts`) est un fichier JSON local (`data/db.json`, ignoré par git) — pratique pour démarrer, mais à remplacer par une vraie base (ex. Supabase) avant un déploiement serverless (Vercel), où le système de fichiers n'est pas persistant entre les requêtes.
+
+## Configuration
+
+Copiez `.env.example` en `.env.local` et renseignez les clés dont vous avez besoin. `DASHBOARD_USER`/`DASHBOARD_PASSWORD` doivent être définis avant tout déploiement public.
+
 ## Getting Started
 
 First, run the development server:
@@ -16,18 +48,12 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
 
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
 ## Deploy on Vercel
 
