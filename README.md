@@ -20,7 +20,7 @@ Un site vitrine + boutique, et un back-office ("assistant commercial virtuel") p
 | Escalade humaine (dashboard) | ✅ fonctionnel dès maintenant |
 | Réponses du chatbot via Claude | ⚙️ optionnel — ajoutez `ANTHROPIC_API_KEY`, sinon réponses simples par défaut |
 | Notification Slack / email | ⚙️ optionnel — ajoutez `SLACK_WEBHOOK_URL` et/ou `RESEND_API_KEY` |
-| Lien de paiement (Stripe) | ⚙️ optionnel — ajoutez `STRIPE_SECRET_KEY`, sinon l'assistant transmet la demande à un humain |
+| Lien de paiement (FedaPay) | ⚙️ optionnel — ajoutez `FEDAPAY_SECRET_KEY`, sinon l'assistant transmet la demande à un humain. **Vérifiez le format exact de la requête dans la doc FedaPay actuelle avant mise en prod** (voir `lib/payment.ts`) |
 | Publication automatique sur les réseaux (Metricool) | ⚙️ optionnel — ajoutez `METRICOOL_API_TOKEN`/`METRICOOL_USER_ID`/`METRICOOL_BLOG_ID`. **Vérifiez le format exact de la requête dans la doc Metricool actuelle avant mise en prod** (voir `lib/social.ts`) |
 | Navigation web autonome, prospection active sur les réseaux, closing 100% automatique | ❌ non implémenté — nécessite des comptes business réels, des accès API avancés et des garde-fous supplémentaires ; à cadrer dans une itération suivante |
 

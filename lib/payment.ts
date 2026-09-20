@@ -1,43 +1,68 @@
 import type { Product } from "./catalog";
 
 /**
- * Creates a Stripe Checkout link for a product using the REST API directly
- * (no SDK dependency). Requires STRIPE_SECRET_KEY; returns null when it's not
- * configured so callers can fall back to a human handling the payment.
+ * Creates a FedaPay payment link for a product using the REST API directly
+ * (no SDK dependency). Requires FEDAPAY_SECRET_KEY; returns null when it's
+ * not configured so callers can fall back to a human handling the payment.
+ *
+ * NOTE: verify this request/response shape against FedaPay's current API
+ * reference (https://docs.fedapay.com) before relying on it in production —
+ * this hasn't been exercised against a real account yet. FedaPay amounts are
+ * whole numbers in the currency's base unit (no cents for XOF/GNF).
  */
 export async function createPaymentLink(
   product: Product,
-  customerEmail?: string
+  customerEmail?: string,
+  customerName?: string
 ): Promise<string | null> {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const secretKey = process.env.FEDAPAY_SECRET_KEY;
   if (!secretKey) return null;
 
+  const apiBase =
+    process.env.FEDAPAY_ENV === "live"
+      ? "https://api.fedapay.com/v1"
+      : "https://sandbox-api.fedapay.com/v1";
   const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
+  const [firstname, ...rest] = (customerName ?? "Client").split(" ");
 
-  const body = new URLSearchParams();
-  body.set("mode", "payment");
-  body.set("success_url", `${siteUrl}/boutique/merci`);
-  body.set("cancel_url", `${siteUrl}/boutique`);
-  body.set("line_items[0][quantity]", "1");
-  body.set("line_items[0][price_data][currency]", product.currency.toLowerCase());
-  body.set("line_items[0][price_data][unit_amount]", String(Math.round(product.price * 100)));
-  body.set("line_items[0][price_data][product_data][name]", product.name);
-  if (customerEmail) body.set("customer_email", customerEmail);
-
-  const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+  const createResponse = await fetch(`${apiBase}/transactions`, {
     method: "POST",
     headers: {
-      Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`,
-      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Bearer ${secretKey}`,
+      "Content-Type": "application/json",
     },
-    body,
+    body: JSON.stringify({
+      description: product.name,
+      amount: Math.round(product.price),
+      currency: { iso: product.currency },
+      callback_url: `${siteUrl}/boutique/merci`,
+      customer: {
+        firstname,
+        lastname: rest.join(" ") || "—",
+        email: customerEmail,
+      },
+    }),
   });
 
-  if (!response.ok) {
-    console.error("Stripe checkout session creation failed", await response.text());
+  if (!createResponse.ok) {
+    console.error("FedaPay transaction creation failed", await createResponse.text());
     return null;
   }
 
-  const session = (await response.json()) as { url?: string };
-  return session.url ?? null;
+  const created = (await createResponse.json()) as { ["v1/transaction"]?: { id?: number } };
+  const transactionId = created["v1/transaction"]?.id;
+  if (!transactionId) return null;
+
+  const tokenResponse = await fetch(`${apiBase}/transactions/${transactionId}/token`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${secretKey}` },
+  });
+
+  if (!tokenResponse.ok) {
+    console.error("FedaPay token generation failed", await tokenResponse.text());
+    return null;
+  }
+
+  const token = (await tokenResponse.json()) as { url?: string };
+  return token.url ?? null;
 }

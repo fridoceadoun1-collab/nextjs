@@ -65,7 +65,7 @@ export async function POST(request: Request) {
   const mentionedProduct = findMentionedProduct(message);
 
   if (wantsToBuy(message) && mentionedProduct) {
-    const paymentLink = await createPaymentLink(mentionedProduct, contact?.email);
+    const paymentLink = await createPaymentLink(mentionedProduct, contact?.email, prospect.name);
     await updateProspect(prospect.id, {
       status: "client",
       interest: mentionedProduct.name,
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     await notifyEscalation({
       kind: "paiement",
       summary: `${prospect.name} veut acheter "${mentionedProduct.name}"`,
-      details: "Le paiement en ligne n'est pas encore configuré (STRIPE_SECRET_KEY manquant) : envoyez le lien manuellement.",
+      details: "Le paiement en ligne n'est pas encore configuré (FEDAPAY_SECRET_KEY manquant) : envoyez le lien manuellement.",
       prospectId: prospect.id,
     });
     return reply({
